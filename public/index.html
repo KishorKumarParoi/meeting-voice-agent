@@ -3,120 +3,96 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Meeting Voice Assistant</title>
+  <title>Meeting Voice Assistant — Executive AI Scribe Studio</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📝</text></svg>">
 </head>
 <body>
-  <div class="container">
-    <header class="header">
-      <div class="brand">
-        <div class="brand-icon">📝</div>
-        <div class="brand-info">
-          <h1>Meeting Assistant</h1>
-          <p>Real-time voice assistant that joins meetings, takes notes, and extracts action items.</p>
-        </div>
+  <!-- Top Navigation -->
+  <header class="meeting-topbar">
+    <div class="meeting-meta">
+      <div class="meeting-badge">EXECUTIVE SCRIBE</div>
+      <h1 class="meeting-title">Q4 Architecture & Voice Infrastructure Review</h1>
+      <div class="timer-pill">
+        <span class="rec-dot"></span>
+        <span id="meetingTimer">14:32</span>
       </div>
-      <div style="display: flex; gap: 10px;">
-        <button id="livekitBtn" class="status-pill" style="cursor: pointer; background: var(--accent-bg); color: var(--accent-color); font-weight: 600;">
-          📡 LiveKit WebRTC
-        </button>
-        <div class="status-pill">
-          <span class="status-dot"></span>
-          <span>Online &bull; Low-Latency</span>
-        </div>
-      </div>
-    </header>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn-webrtc" id="livekitMeetingBtn">📡 LiveKit WebRTC</button>
+      <button class="btn-export" id="exportMinutesBtn">📥 Export Minutes (.md)</button>
+    </div>
+  </header>
 
-    <main class="main-card">
-      <div class="console-row">
-        <div class="visualizer-box">
-          <div style="display: flex; justify-content: space-between; font-size: 13px; color: #94a3b8;">
-            <span id="statusLabel">Ready for Voice Input</span>
-            <span style="background: rgba(255,255,255,0.1); padding: 3px 8px; border-radius: 9999px;">Dynamic 60fps</span>
+  <!-- 3-Column Layout -->
+  <div class="meeting-layout">
+    <!-- Left: Agenda & Attendees -->
+    <aside class="col-agenda">
+      <div>
+        <div class="section-label">Meeting Agenda</div>
+        <div class="agenda-list" id="agendaList"></div>
+      </div>
+      <div>
+        <div class="section-label">Active Attendees</div>
+        <div class="attendees-list">
+          <div class="attendee-item"><span>👨‍💻</span><b>Alex Mercer</b> <span style="color:#64748b;">(Lead)</span></div>
+          <div class="attendee-item"><span>👩‍💼</span><b>Sarah Chen</b> <span style="color:#64748b;">(VP Eng)</span></div>
+          <div class="attendee-item"><span>🚀</span><b>Kishor Paroi</b> <span style="color:#64748b;">(AI Architect)</span></div>
+          <div class="attendee-item" style="border: 1px solid rgba(168,85,247,0.3);"><span>📝</span><b style="color:#c084fc;">Nimbus Scribe</b> <span style="color:#a855f7;">(AI)</span></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Center: Diarized Audio & Scribe Stream -->
+    <main class="col-center">
+      <div class="meeting-canvas-container">
+        <canvas id="meetingVisualizer" class="visualizer-canvas" width="600" height="80"></canvas>
+        <div class="speech-controls">
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span style="font-size: 13px; color: #94a3b8;">Speaker:</span>
+            <select id="meetingSpeakerSelect" class="speaker-select">
+              <option value="Alex Mercer">Alex Mercer (Tech Lead)</option>
+              <option value="Sarah Chen">Sarah Chen (VP Eng)</option>
+              <option value="Kishor Paroi">Kishor Paroi (Enterprise Architect)</option>
+            </select>
           </div>
-          <canvas id="visualizerCanvas" class="visualizer-canvas"></canvas>
-          <div class="controls-bar">
-            <button id="micBtn" class="mic-btn">
-              <span>🎙️ Push to Talk</span>
+          <div style="display: flex; gap: 8px;">
+            <button id="simDecisionBtn" class="btn-export" style="font-size: 12px; padding: 6px 12px;">⚖️ Log Decision</button>
+            <button id="simActionBtn" class="btn-export" style="font-size: 12px; padding: 6px 12px;">📋 Assign Action</button>
+            <button id="meetingMicBtn" class="btn-mic">
+              <span>🎙️ Push to Speak</span>
             </button>
-            <button id="interruptBtn" class="interrupt-btn">
-              <span>🛑 Barge-in Stop</span>
-            </button>
-            <button id="quickQueryBtn" class="interrupt-btn" style="background: rgba(255,255,255,0.18);">
-              <span>⚡ Quick Query</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="metrics-box">
-          <div class="metrics-title">
-            <span>Latency Waterfall</span>
-            <span style="font-size: 12px; color: #64748b;">Telemetry</span>
-          </div>
-          <div>
-            <div class="latency-line"><span>ASR Transcription:</span> <b id="asrVal">45.0 ms</b></div>
-            <div class="latency-line"><span>LLM TTFT:</span> <b id="llmVal">180.0 ms</b></div>
-            <div class="latency-line"><span>TTS TTFB:</span> <b id="ttsVal">135.0 ms</b></div>
-          </div>
-          <div class="total-box">
-            <div style="font-size: 11px; color: #64748b; text-transform: uppercase;">Roundtrip Latency</div>
-            <div class="total-num" id="totalVal">360.0 ms</div>
           </div>
         </div>
       </div>
 
-      <div class="activity-grid">
-        <div class="transcript-box">
-          <div class="box-title">Live Transcript</div>
-          <div class="messages-list" id="msgList">
-            <div class="msg-bubble msg-agent">
-              Hello! I am your Meeting Assistant. How can I assist you right now?
-            </div>
+      <!-- Live Diarized Conversation Feed -->
+      <div class="transcript-feed" id="transcriptFeed">
+        <div class="turn-box">
+          <div class="turn-header">
+            <span class="speaker-tag">Alex Mercer (Tech Lead)</span>
+            <span style="color: #64748b;">10:02 AM</span>
           </div>
+          <div class="turn-text">Welcome everyone. We are here to review the voice agent suite and verify production readiness across all subdomains.</div>
         </div>
-
-        <div class="actions-box">
-          <div class="box-title">Tool Executions & Decisions</div>
-          <div class="actions-list" id="actionList">
-            <div class="action-card">⚡ Live Scribe, Action Item Extraction & Minutes online</div>
+        <div class="turn-box scribe-turn decision-turn">
+          <div class="turn-header">
+            <span class="scribe-tag">Nimbus Scribe (AI)</span>
+            <span style="color: #64748b;">10:03 AM</span>
+            <span class="decision-badge">⚖️ DECISION</span>
           </div>
-        </div>
-      </div>
-
-      <div class="settings-bar">
-        <div>
-          <label><b>Mode:</b></label>
-          <select id="ragSel">
-            <option value="ragless">RAG-less (Direct Context)</option>
-            <option value="rag">RAG (Vector Search)</option>
-          </select>
-        </div>
-        <div>
-          <label><b>Streaming:</b></label>
-          <select id="streamSel">
-            <option value="streaming">Streaming Mode</option>
-            <option value="batch">Batch Mode</option>
-          </select>
-        </div>
-        <div>
-          <label><b>TTS Engine:</b></label>
-          <select id="ttsSel">
-            <option value="elevenlabs">ElevenLabs Turbo v2.5</option>
-            <option value="openai">OpenAI TTS-1</option>
-            <option value="browser">Browser Native</option>
-          </select>
+          <div class="turn-text">Standardized on Opus 48kHz audio encoding for all streaming voice sessions with sub-200ms latency targets.</div>
         </div>
       </div>
     </main>
 
-    <footer class="footer">
-      <p>Part of Nimbus Voice Suite &bull; Deployed at <a href="https://meeting.kishor.tech">https://meeting.kishor.tech</a> &bull; Powered by LiveKit WebRTC</p>
-    </footer>
+    <!-- Right: Action Items Kanban -->
+    <aside class="col-actions">
+      <div class="section-label">Action Items Board</div>
+      <div class="actions-container" id="actionsContainer"></div>
+    </aside>
   </div>
 
-  <script src="/js/visualizer.js"></script>
-  <script src="/js/voice-engine.js"></script>
-  <script src="/js/app.js"></script>
+  <script src="/js/meeting-app.js"></script>
 </body>
 </html>

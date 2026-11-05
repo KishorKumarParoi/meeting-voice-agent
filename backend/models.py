@@ -1,52 +1,53 @@
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
 
-class LatencyMetrics(BaseModel):
+class LatencyBreakdown(BaseModel):
     asr_ms: float = 0.0
     llm_ttft_ms: float = 0.0
     tts_ttfb_ms: float = 0.0
     total_ms: float = 0.0
-    mode: str = "streaming"
 
-class ToolExecutionResult(BaseModel):
-    tool_name: str
-    arguments: Dict[str, Any]
-    output: Any
-    latency_ms: float = 0.0
+class AgendaItem(BaseModel):
+    id: str
+    title: str
+    completed: bool = False
+    duration_min: int = 15
 
-class ChatMessage(BaseModel):
+class ActionItem(BaseModel):
+    id: str
+    task: str
+    assignee: str
+    deadline: str
+    priority: str = "High" # High, Medium, Low
+    status: str = "todo" # todo, in_progress, done
+
+class SpeakerTurn(BaseModel):
+    speaker: str
     role: str
-    content: str
-    timestamp: Optional[str] = None
+    text: str
+    timestamp: str
+    is_decision: bool = False
 
-class VoiceProcessRequest(BaseModel):
+class MeetingState(BaseModel):
+    meeting_title: str
+    meeting_id: str
+    start_time: str
+    agenda: List[AgendaItem]
+    speakers: List[Dict[str, str]]
+    turns: List[SpeakerTurn]
+    action_items: List[ActionItem]
+    decisions: List[str]
+
+class MeetingVoiceRequest(BaseModel):
     text: Optional[str] = None
     audio_base64: Optional[str] = None
-    messages: List[ChatMessage] = Field(default_factory=list)
-    system_prompt: Optional[str] = None
-    use_rag: bool = False
-    streaming: bool = True
-    tts_provider: Optional[str] = "elevenlabs"
-    response_length: str = "medium"
-    endpoint_silence_ms: int = 600
+    speaker: str = "Alex Mercer (Tech Lead)"
+    tts_provider: str = "elevenlabs"
 
-class VoiceProcessResponse(BaseModel):
-    transcript: str
+class MeetingVoiceResponse(BaseModel):
     reply: str
+    speaker_turn: SpeakerTurn
+    action_items_added: List[ActionItem] = Field(default_factory=list)
+    decision_logged: Optional[str] = None
     audio_base64: Optional[str] = None
-    latency: LatencyMetrics
-    tools_executed: List[ToolExecutionResult] = Field(default_factory=list)
-    action_items: List[str] = Field(default_factory=list)
-    rag_used: bool = False
-    rag_chunks: List[str] = Field(default_factory=list)
-
-class LiveKitTokenRequest(BaseModel):
-    room_name: str
-    participant_identity: str
-    participant_name: Optional[str] = None
-
-class LiveKitTokenResponse(BaseModel):
-    server_url: str
-    token: str
-    room_name: str
-    participant_identity: str
+    latency: LatencyBreakdown
